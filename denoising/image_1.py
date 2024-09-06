@@ -30,5 +30,8 @@ img_final = cv2.convertScaleAbs(img_adjusted, alpha=alpha, beta=beta)
 # Display results
 cv2.imshow("Original", img)
 cv2.imshow("Result", img_final)
+
+# cv2.imwrite("result_nomask_01.png", result)
+
 cv2.waitKey(0)
 cv2.destroyAllWindows()

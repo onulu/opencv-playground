@@ -38,6 +38,9 @@ def denoising_one(image_path):
     cv2.imshow("Original", img)
     cv2.imshow("Mask", mask)
     cv2.imshow("Denoised Result", result)
+
+    # cv2.imwrite("result_01.png", result)
+
     cv2.waitKey(0)
     cv2.destroyAllWindows()
 

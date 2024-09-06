@@ -16,5 +16,9 @@ result = cv2.addWeighted(denoised, 0.7, sharpened, 0.3, 0)
 cv2.imshow("original", img)
 cv2.imshow("sharpened", sharpened)
 cv2.imshow("Result", result)
+
+# cv2.imwrite("result_02.png", result)
+
+
 cv2.waitKey(0)
 cv2.destroyAllWindows()
