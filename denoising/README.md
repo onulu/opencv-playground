@@ -22,6 +22,9 @@ After
 4. 처리된 하늘 부분과 원본 건물 부분을 다시 합침
 5. 전체 이미지의 밝기를 낮추고 대비를 조정
 
+Before
+![대체 iamge1](/denoising/img/01.png)
+
 After: masking
 ![대체 iamge1](/denoising/img/result_01.png)
 
@@ -32,7 +35,7 @@ After: masking
 3. 블렌딩: 노이즈가 제거된 이미지(70%)와 선명화된 이미지(30%)를 혼합
 
 Before
-![대체 iamge2](/denoising/img/02.png)
+![대체 iamge2](/denoising/img/03.png)
 
 After
 ![대체 iamge2](/denoising/img/result_02.png)
@@ -44,7 +47,7 @@ After
 3. `3x3` 커널을 사용한 `High-Pass` 필터로 이미지 선명도 조절
 
 Before
-![대체 iamge1](/denoising/img/03.png)
+![대체 iamge1](/denoising/img/05.png)
 
 After
 ![대체 iamge1](/denoising/img/result_03.png)
