@@ -1,15 +1,17 @@
 import cv2
 import numpy as np
-import os
 from pathlib import Path
+from functools import partial
 
-INPUT_DIR = os.path.join(os.getcwd(), "snack/org")
-OUTPUT_DIR = os.path.join(os.getcwd(), "snack/dist")
+
+INPUT_DIR = Path.cwd() / "snack" / "org"
+OUTPUT_DIR = Path.cwd() / "snack" / "dist"
 TARGET_SIZE = (224, 224)
 
 
 class ImageAugmentor:
-    def rotate(self, image, angle):
+    @staticmethod
+    def rotate(image: np.ndarray, angle: float) -> np.ndarray:
         height, width = image.shape[:2]
         center = (width // 2, height // 2)
 
@@ -33,15 +35,13 @@ class ImageAugmentor:
 
         return rotated
 
-    def flip(self, image, direction="horizontal"):
-        if direction == "horizontal":
-            return cv2.flip(image, 1)
-        elif direction == "vertical":
-            return cv2.flip(image, 0)
-        else:
-            return cv2.flip(image, -1)
+    @staticmethod
+    def flip(image: np.ndarray, direction: str = "horizontal") -> np.ndarray:
+        codes = {"horizontal": 1, "vertical": 0, "both": -1}
+        return cv2.flip(image, codes.get(direction, 1))
 
-    def scale(self, image, factor):
+    @staticmethod
+    def scale(image: np.ndarray, factor: float) -> np.ndarray:
         height, width = image.shape[:2]
         new_height, new_width = int(height * factor), int(width * factor)
         scaled = cv2.resize(
@@ -66,27 +66,39 @@ class ImageAugmentor:
 
         return scaled
 
-    def add_noise(self, image, level=25):
+    @staticmethod
+    def add_noise(image: np.ndarray, level: int = 25):
         noise = np.random.normal(0, level, image.shape).astype(np.uint8)
         return np.clip(image.astype(np.int32) + noise, 0, 255).astype(np.uint8)
 
-    def blur(self, image, kernel_size=3):
+    @staticmethod
+    def blur(image: np.ndarray, kernel_size: int = 3):
         return cv2.GaussianBlur(image, (kernel_size, kernel_size), 0)
 
-    def adjust_brightness(self, image, factor):
+    @staticmethod
+    def adjust_brightness(image: np.ndarray, factor: float):
         return cv2.convertScaleAbs(image, alpha=factor, beta=0)
 
-    def adjust_contrast(self, image, factor):
+    @staticmethod
+    def adjust_contrast(image: np.ndarray, factor: float):
         return cv2.addWeighted(image, factor, image, 0, 0)
 
 
-def process_images(input_dir, output_dir):
+def process_images(input_dir: Path, output_dir: Path):
+    output_dir.mkdir(parents=True, exist_ok=True)
     augmentor = ImageAugmentor()
-    input_path = Path(input_dir)
-    output_path = Path(output_dir)
-    output_path.mkdir(parents=True, exist_ok=True)
 
-    for img_file in input_path.glob("*"):
+    augmentations = [
+        ("rotated_15", partial(augmentor.rotate, angle=15)),
+        ("flipped_h", partial(augmentor.flip, direction="horizontal")),
+        ("scaled_1_5", partial(augmentor.scale, factor=1.5)),
+        ("blurred", partial(augmentor.blur, kernel_size=3)),
+        ("noisy", partial(augmentor.add_noise, level=20)),
+        ("bright", partial(augmentor.adjust_brightness, factor=2)),
+        ("contrast", partial(augmentor.adjust_contrast, factor=1.2)),
+    ]
+
+    for img_file in input_dir.glob("*"):
         image = cv2.imread(str(img_file))
         if image is None:
             print("Unable to read.")
@@ -95,32 +107,9 @@ def process_images(input_dir, output_dir):
         image = cv2.resize(image, TARGET_SIZE)
         base_name = img_file.stem
 
-        cv2.imwrite(
-            str(output_path / f"{base_name}_rotated_15.jpg"),
-            augmentor.rotate(image, 15),
-        )
-        cv2.imwrite(
-            str(output_path / f"{base_name}_flipped_h.jpg"),
-            augmentor.flip(image, "horizontal"),
-        )
-        cv2.imwrite(
-            str(output_path / f"{base_name}_scaled_1.5.jpg"),
-            augmentor.scale(image, 1.5),
-        )
-        cv2.imwrite(
-            str(output_path / f"{base_name}_blurred.jpg"), augmentor.blur(image, 3)
-        )
-        cv2.imwrite(
-            str(output_path / f"{base_name}_noisy.jpg"), augmentor.add_noise(image, 20)
-        )
-        cv2.imwrite(
-            str(output_path / f"{base_name}_bright.jpg"),
-            augmentor.adjust_brightness(image, 1.2),
-        )
-        cv2.imwrite(
-            str(output_path / f"{base_name}_contrast.jpg"),
-            augmentor.adjust_contrast(image, 1.2),
-        )
+        for name, func in augmentations:
+            output_path = output_dir / f"{base_name}_{name}.jpg"
+            cv2.imwrite(str(output_path), func(image))
 
 
 def main():
